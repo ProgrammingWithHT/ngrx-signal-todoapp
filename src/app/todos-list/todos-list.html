@@ -1,0 +1,68 @@
+<section class="todo-shell">
+  <div class="hero">
+    <p class="eyebrow">Daily Focus</p>
+    <h1>Simple todo list</h1>
+    <p class="subtitle">A calm space to capture tasks, stay organized, and keep momentum.</p>
+  </div>
+
+  <div class="stats">
+    <article class="stat-card">
+      <span class="stat-label">Total</span>
+      <strong>{{ totalCount() }}</strong>
+    </article>
+    <article class="stat-card">
+      <span class="stat-label">Pending</span>
+      <strong>{{ pendingCount() }}</strong>
+    </article>
+    <article class="stat-card">
+      <span class="stat-label">Completed</span>
+      <strong>{{ completedCount() }}</strong>
+    </article>
+  </div>
+
+  <div class="todo-card">
+    <mat-form-field appearance="outline" class="todo-input">
+      <mat-label>Add a task</mat-label>
+      <input matInput #input placeholder="Write something useful..." (keyup.enter)="onAddTodo(input)">
+      <mat-icon matSuffix>edit_note</mat-icon>
+    </mat-form-field>
+
+    <mat-button-toggle-group class="filter-group" [value]="filter()" (valueChange)="filter.set($event)">
+      <mat-button-toggle value="all">All</mat-button-toggle>
+      <mat-button-toggle value="pending">Pending</mat-button-toggle>
+      <mat-button-toggle value="completed">Completed</mat-button-toggle>
+    </mat-button-toggle-group>
+
+    @if (filteredTodos().length) {
+      <mat-selection-list class="todo-list" #todoes>
+        @for (todo of filteredTodos(); track todo.id) {
+          <mat-list-option
+            class="todo-item"
+            [selected]="todo.completed"
+            (selectedChange)="onTodoToggled(todo.id, $event)"
+          >
+            <div class="todo-row">
+              <span class="todo-title" [class.is-complete]="todo.completed">
+                {{ todo.title }}
+              </span>
+
+              <button
+                type="button"
+                class="delete-button"
+                (click)="onDeleteTodo(todo.id, $event)"
+                aria-label="Delete todo"
+              >
+                <mat-icon fontIcon="delete"></mat-icon>
+              </button>
+            </div>
+          </mat-list-option>
+        }
+      </mat-selection-list>
+    } @else {
+      <div class="empty-state">
+        <mat-icon>task_alt</mat-icon>
+        <p>No todos in this view yet.</p>
+      </div>
+    }
+  </div>
+</section>
