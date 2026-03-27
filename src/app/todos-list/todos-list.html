@@ -1,68 +1,129 @@
 <section class="todo-shell">
+
   <div class="hero">
     <p class="eyebrow">Daily Focus</p>
     <h1>Simple todo list</h1>
     <p class="subtitle">A calm space to capture tasks, stay organized, and keep momentum.</p>
   </div>
 
+  <div class="learning-panel">
+
+  <h3>📘 What I'm Learning</h3>
+
+  <ul>
+    <li><strong>Signal:</strong> Reactive state that updates UI automatically</li>
+    <li><strong>withState:</strong> Stores app data (todos, filter, loading)</li>
+    <li><strong>withMethods:</strong> Handles actions like add, delete, update</li>
+    <li><strong>patchState:</strong> Updates state without replacing whole object</li>
+    <li><strong>withComputed:</strong> Creates derived data (filteredTodos, counts)</li>
+  </ul>
+
+</div>
+
   <div class="stats">
     <article class="stat-card">
       <span class="stat-label">Total</span>
-      <strong>{{ totalCount() }}</strong>
+      <strong>{{ store.totalCount() }}</strong>
     </article>
     <article class="stat-card">
       <span class="stat-label">Pending</span>
-      <strong>{{ pendingCount() }}</strong>
+      <strong>{{ store.pendingCount() }}</strong>
     </article>
     <article class="stat-card">
       <span class="stat-label">Completed</span>
-      <strong>{{ completedCount() }}</strong>
+      <strong>{{ store.completedCount() }}</strong>
     </article>
   </div>
 
-  <div class="todo-card">
+  <div class="todo-card todo-card1">
     <mat-form-field appearance="outline" class="todo-input">
-      <mat-label>Add a task</mat-label>
-      <input matInput #input placeholder="Write something useful..." (keyup.enter)="onAddTodo(input)">
+      <mat-label>Add a task and press enter</mat-label>
+      <input style="text-decoration: none; border: none;" matInput #input placeholder="Write something useful..."
+        (keyup.enter)="onAddTodo(input.value)">
       <mat-icon matSuffix>edit_note</mat-icon>
     </mat-form-field>
 
-    <mat-button-toggle-group class="filter-group" [value]="filter()" (valueChange)="filter.set($event)">
+
+
+    <mat-button-toggle-group class="filter-group" [value]="store.filter()" (change)="store.setFilter($event.value)">
       <mat-button-toggle value="all">All</mat-button-toggle>
       <mat-button-toggle value="pending">Pending</mat-button-toggle>
       <mat-button-toggle value="completed">Completed</mat-button-toggle>
     </mat-button-toggle-group>
 
-    @if (filteredTodos().length) {
-      <mat-selection-list class="todo-list" #todoes>
-        @for (todo of filteredTodos(); track todo.id) {
-          <mat-list-option
-            class="todo-item"
-            [selected]="todo.completed"
-            (selectedChange)="onTodoToggled(todo.id, $event)"
-          >
-            <div class="todo-row">
-              <span class="todo-title" [class.is-complete]="todo.completed">
-                {{ todo.title }}
-              </span>
+    <!-- using filter approach -->
+    <mat-selection-list #todoes>
+      @for (todo of store.filteredTodos(); track todo.id; let index = $index) {
 
-              <button
-                type="button"
-                class="delete-button"
-                (click)="onDeleteTodo(todo.id, $event)"
-                aria-label="Delete todo"
-              >
-                <mat-icon fontIcon="delete"></mat-icon>
-              </button>
-            </div>
-          </mat-list-option>
-        }
-      </mat-selection-list>
-    } @else {
-      <div class="empty-state">
-        <mat-icon>task_alt</mat-icon>
-        <p>No todos in this view yet.</p>
-      </div>
-    }
+
+      <mat-list-option class="chks1" [selected]="todo.completed" (selectedChange)="onTodoToggled(todo.id, $event)">
+
+        <div class="chks">
+
+          <button class="delete-button">
+            <mat-icon (click)="onDeleteTodo(todo.id, $event)" aria-hidden="false" aria-label="Example delete icon"
+              fontIcon="delete"></mat-icon>
+          </button>
+
+          <div class="dd">
+            <span style="margin: 0;" [ngStyle]="{'text-decoration': todo.completed ? 'line-through' : 'none'}">{{todo.title}} - {{
+              todo.completed ? 'Completed' : 'Pending' }}</span>
+          </div>
+
+        </div>
+
+      </mat-list-option>
+
+      }
+    </mat-selection-list>
+
+    <p>
+      Options selected: {{todoes.selectedOptions.selected.length}}
+    </p>
+
+
   </div>
+
+
+
+
+
 </section>
+
+<!-- <mat-form-field>
+  <mat-label>Enter a Todo and press Enter</mat-label>
+  <input matInput #input (keyup.enter)="onAddTodo(input.value)">
+  <mat-icon matSuffix>edit</mat-icon>
+</mat-form-field> -->
+
+<!-- <div>{{store.totalCount()}}</div>
+<div>{{store.pendingCount()}}</div>
+<div>{{store.completedCount()}}</div> -->
+
+<!-- <mat-button-toggle-group [value]="store.filter()" (change)="store.setFilter($event.value)">
+  <mat-button-toggle value="all">All</mat-button-toggle>
+  <mat-button-toggle value="pending">Pending</mat-button-toggle>
+  <mat-button-toggle value="completed">Completed</mat-button-toggle>
+</mat-button-toggle-group> -->
+
+
+
+
+<!-- <mat-selection-list #todoes>
+  @for (todo of store.todos(); track todo.id; let index = $index) {
+    
+    
+    <mat-list-option [selected]="todo.completed" (selectedChange)="onTodoToggled(todo.id, $event)">
+        
+        <mat-icon (click)="onDeleteTodo(todo.id, $event)" aria-hidden="false" aria-label="Example delete icon" fontIcon="delete"></mat-icon>
+
+        <span [ngStyle]="{'text-decoration': todo.completed ? 'line-through' : 'none'}">
+          {{todo.title}}
+        </span>
+    </mat-list-option>
+  }
+</mat-selection-list>
+
+<p>
+  Options selected: {{todoes.selectedOptions.selected.length}}
+</p> -->

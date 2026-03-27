@@ -1,6 +1,6 @@
 import { inject } from "@angular/core";
 import { Todo } from "../model/todo.model";
-import { patchState, signalStore, withMethods, withState } from '@ngrx/signals';
+import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
 import { Todoservice } from "../services/todoservice";
 
 export type TodosFilter = "all" | "pending" | "completed";
@@ -54,8 +54,37 @@ export const TodosStore = signalStore(
                         todo.id == id ? {...todo, completed}: todo
                     )
                 }))
+            },
+
+            setFilter(filter: TodosFilter){
+                patchState(store, {filter})
             }
             
         })
-    )
+    ),
+
+    withComputed(({ todos, filter }) => ({
+
+        filteredTodos: () => {
+            // console.log("cocc", filter())
+            if (filter() === 'all') return todos();
+
+            if (filter() === 'pending') {
+                return todos().filter(todo => !todo.completed);
+            }
+
+            if (filter() === 'completed') {
+                return todos().filter(todo => todo.completed);
+            }
+
+            return todos();
+        },
+
+        totalCount: () => todos().length,
+        pendingCount: () => todos().filter((data)=>{
+            return (!data.completed)
+        }).length,
+        completedCount: () => todos().filter(data => data.completed).length
+
+    }))
 )

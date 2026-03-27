@@ -1,6 +1,6 @@
 :host {
   --page-bg: linear-gradient(180deg, #f8fbff 0%, #eef4f1 100%);
-  --card-bg: rgba(255, 255, 255, 0.8);
+  --card-bg: rgba(255, 255, 255, 0.571);
   --card-border: rgba(16, 24, 40, 0.08);
   --text-main: #152033;
   --text-muted: #667085;
@@ -19,12 +19,10 @@
   width: min(100%, 760px);
   margin: 0 auto;
 }
-
 .hero {
   margin-bottom: 24px;
   color: var(--text-main);
 }
-
 .eyebrow {
   margin: 0 0 8px;
   color: var(--accent);
@@ -33,14 +31,12 @@
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
-
 .hero h1 {
   margin: 0;
   font-size: clamp(2rem, 3vw, 2.8rem);
   line-height: 1.05;
   letter-spacing: -0.04em;
 }
-
 .subtitle {
   max-width: 34rem;
   margin: 12px 0 0;
@@ -48,14 +44,12 @@
   font-size: 1rem;
   line-height: 1.6;
 }
-
-.stats {
+.stats{
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0,1fr));
   gap: 12px;
   margin-bottom: 18px;
 }
-
 .stat-card,
 .todo-card {
   border: 1px solid var(--card-border);
@@ -64,7 +58,6 @@
   box-shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
   backdrop-filter: blur(14px);
 }
-
 .stat-card {
   padding: 16px 18px;
 }
@@ -81,84 +74,45 @@
   color: var(--text-muted);
   font-size: 0.9rem;
 }
-
-.todo-card {
-  padding: 20px;
-}
-
 .todo-input {
   width: 100%;
+  position: relative;
+  top: 10px;
+  left: 0;
 }
-
-.filter-group {
-  margin: 4px 0 18px;
+.filter-group{
+  
 }
-
-.todo-list {
-  padding-top: 0;
+.todo-card1{
+  padding: 10px 20px;
 }
-
-.todo-item {
-  margin-bottom: 10px;
-  border: 1px solid rgba(16, 24, 40, 0.06);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.72);
-  overflow: hidden;
+.chks1{
+  background-color: rgb(255, 255, 255);
+  border: 1px solid rgba(0, 0, 0, 0.124);
+  border-radius: 10px;
+  /* padding: 5px; */
+  margin: 10px 0;
+  
 }
-
-.todo-row {
+.chks{
   display: flex;
-  align-items: center;
+  flex-direction: row-reverse;
   justify-content: space-between;
-  gap: 16px;
-  width: 100%;
-}
-
-.todo-title {
-  color: var(--text-main);
-  font-size: 1rem;
-  line-height: 1.5;
-  transition: opacity 180ms ease, color 180ms ease;
-}
-
-.todo-title.is-complete {
-  color: var(--text-muted);
-  text-decoration: line-through;
-  opacity: 0.8;
-}
-
-.delete-button {
-  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border: 0;
-  border-radius: 999px;
-  background: var(--danger-soft);
+  /* background-color: red; */
+  overflow: auto;
+  margin: 0; 
+}
+.delete-button {
   color: var(--danger-text);
-  cursor: pointer;
-  transition: transform 180ms ease, background-color 180ms ease;
+  border: none;
+  border-radius: 100%;
+  padding: 2px;
+  line-height: 1px;
+  
 }
-
-.delete-button:hover {
-  transform: translateY(-1px);
-  background: #ffe6e1;
-}
-
-.empty-state {
-  display: grid;
-  place-items: center;
-  gap: 10px;
-  min-height: 180px;
-  border: 1px dashed rgba(16, 24, 40, 0.12);
-  border-radius: 20px;
-  color: var(--text-muted);
-  text-align: center;
-}
-
-.empty-state mat-icon {
-  color: var(--accent);
+.delete-button:hover{
+  color: red;
 }
 
 @media (max-width: 640px) {
@@ -172,5 +126,10 @@
 
   .todo-card {
     padding: 16px;
+  }
+}
+@media (max-width: 365px) {
+  .dd{
+    font-size: 13px;
   }
 }
