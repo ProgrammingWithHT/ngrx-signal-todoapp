@@ -7,7 +7,9 @@
 @if (!store.loading()) {
     <app-todos-list />
 }@else {
-    <mat-spinner />
+    <div style="display: flex; justify-content: center;align-items: center; height: 100vh;">
+        <mat-spinner />
+    </div>
 }
 
 
