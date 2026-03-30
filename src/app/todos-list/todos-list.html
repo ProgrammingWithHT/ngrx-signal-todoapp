@@ -1,24 +1,27 @@
 <section class="todo-shell">
-
   <div class="hero">
     <p class="eyebrow">Daily Focus</p>
     <h1>Simple todo list</h1>
-    <p class="subtitle">A calm space to capture tasks, stay organized, and keep momentum.</p>
+    <p class="subtitle">Capture tasks with tags, attachments, and categories so each todo carries the context you need.</p>
   </div>
 
   <div class="learning-panel">
+    <h3>What This Version Supports</h3>
 
-  <h3>📘 What I'm Learning</h3>
+    <ul>
+      <li><strong>Tags:</strong> add quick labels like <code>frontend</code> or <code>urgent</code>.</li>
+      <li><strong>Attachments:</strong> include images and files directly with a todo draft.</li>
+      <li><strong>Categories:</strong> create, assign, and remove task types from the same screen.</li>
+      <li><strong>Search:</strong> search by title, category, or tag.</li>
+    </ul>
 
-  <ul>
-    <li><strong>Signal:</strong> Reactive state that updates UI automatically</li>
-    <li><strong>withState:</strong> Stores app data (todos, filter, loading)</li>
-    <li><strong>withMethods:</strong> Handles actions like add, delete, update</li>
-    <li><strong>patchState:</strong> Updates state without replacing whole object</li>
-    <li><strong>withComputed:</strong> Creates derived data (filteredTodos, counts)</li>
-  </ul>
+    <mat-form-field class="todo-input search-input" appearance="outline">
+      <mat-label>Search todos</mat-label>
+      <input matInput placeholder="Search title, category, or tag..." [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)">
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+  </div>
 
-</div>
 
   <div class="stats">
     <article class="stat-card">
@@ -33,17 +36,137 @@
       <span class="stat-label">Completed</span>
       <strong>{{ store.completedCount() }}</strong>
     </article>
+    <article class="stat-card">
+      <span class="stat-label">Categories</span>
+      <strong>{{ store.availableCategories().length }}</strong>
+    </article>
   </div>
 
-  <div class="todo-card todo-card1">
+  <div class="todo-card category-card">
+    <div class="section-heading">
+      <div>
+        <p class="section-eyebrow">Manage Types</p>
+        <h2>Categories</h2>
+      </div>
+    </div>
+
+    <div class="category-toolbar">
+      <mat-form-field appearance="outline" class="category-input">
+        <mat-label>New category</mat-label>
+        <input matInput [(ngModel)]="categoryDraft" placeholder="Ex: Work, Study, Personal" (keyup.enter)="onAddCategory()">
+      </mat-form-field>
+
+      <button mat-stroked-button type="button" class="secondary-action" (click)="onAddCategory()">
+        Add category
+      </button>
+    </div>
+
+    <div class="chip-row">
+      @for (category of store.availableCategories(); track category) {
+        <div class="category-chip">
+          <span>{{ category }}</span>
+
+          @if (category !== 'General') {
+            <button type="button" class="chip-remove" (click)="onRemoveCategory(category, $event)">remove</button>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="todo-card todo-card1" #composer>
+    <div class="section-heading">
+      <div>
+        <p class="section-eyebrow">{{ isEditing ? 'Edit Todo' : 'New Todo' }}</p>
+        <h2>{{ isEditing ? 'Update your task details' : 'Create a richer task' }}</h2>
+      </div>
+
+      @if (isEditing) {
+        <button mat-stroked-button type="button" class="secondary-action" (click)="resetDraft()">
+          Cancel edit
+        </button>
+      }
+    </div>
+
     <mat-form-field appearance="outline" class="todo-input">
-      <mat-label>Add a task and press enter</mat-label>
-      <input style="text-decoration: none; border: none;" matInput #input placeholder="Write something useful..."
-        (keyup.enter)="onAddTodo(input.value)">
+      <mat-label>{{ isEditing ? 'Edit your task and press enter' : 'Add a task and press enter' }}</mat-label>
+      <input
+        matInput
+        #input
+        [ngModel]="draftTitle"
+        (ngModelChange)="onInputChange($event)"
+        [placeholder]="isEditing ? 'Refine this task...' : 'Write something useful...'"
+        (keyup.enter)="onSubmit()"
+        (focus)="isEditing ? input.select() : null">
       <mat-icon matSuffix>edit_note</mat-icon>
     </mat-form-field>
 
+    <div class="composer-grid" style="align-items: start;">
+      <mat-form-field appearance="outline">
+        <mat-label>Category</mat-label>
+        <mat-select [(ngModel)]="draftCategory">
+          @for (category of store.availableCategories(); track category) {
+            <mat-option [value]="category">{{ category }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
 
+      <div class="tag-editor">
+        <mat-form-field appearance="outline" class="tag-input">
+          <mat-label>Add tag</mat-label>
+          <input matInput [(ngModel)]="tagDraft" placeholder="Ex: urgent" (keydown)="onTagDraftKeydown($event)">
+        </mat-form-field>
+
+        <button mat-stroked-button type="button" class="secondary-action" (click)="addTag()">
+          Add tag
+        </button>
+      </div>
+    </div>
+
+    <div class="chip-row">
+      @for (tag of draftTags; track tag) {
+        <div class="tag-chip">
+          <span>#{{ tag }}</span>
+          <button type="button" class="chip-remove" (click)="removeTag(tag)">remove</button>
+        </div>
+      }
+    </div>
+
+    <div class="attachment-toolbar">
+      <label class="file-picker">
+        <input type="file" multiple (change)="onFilesSelected($event)">
+        <span>Add images / files</span>
+      </label>
+
+      <p class="helper-text">Attachments</p>
+    </div>
+
+    @if (draftAttachments.length) {
+      <div class="attachment-grid">
+        @for (attachment of draftAttachments; track attachment.id) {
+          <article class="attachment-card">
+            @if (attachment.kind === 'image') {
+              <img [src]="attachment.url" [alt]="attachment.name">
+            } @else {
+              <div class="file-icon">
+                <mat-icon>attach_file</mat-icon>
+              </div>
+            }
+
+            <div class="attachment-meta">
+              <span>{{ attachmentLabel(attachment) }}</span>
+              <button type="button" class="chip-remove" (click)="removeAttachment(attachment.id)">remove</button>
+            </div>
+          </article>
+        }
+      </div>
+    }
+
+    <div class="action-row">
+      <button mat-flat-button type="button" class="primary-action" (click)="onSubmit()">
+        {{ isEditing ? 'Save changes' : 'Add todo' }}
+      </button>
+    </div>
 
     <mat-button-toggle-group class="filter-group" [value]="store.filter()" (change)="store.setFilter($event.value)">
       <mat-button-toggle value="all">All</mat-button-toggle>
@@ -51,79 +174,55 @@
       <mat-button-toggle value="completed">Completed</mat-button-toggle>
     </mat-button-toggle-group>
 
-    <!-- using filter approach -->
-    <mat-selection-list #todoes>
-      @for (todo of store.filteredTodos(); track todo.id; let index = $index) {
+    <mat-list class="todo-list">
+      @for (todo of paginatedTodos(); track todo.id) {
+        <mat-list-item class="todo-item">
+          <div class="todo-layout">
+            <div class="todo-main">
+              <div class="todo-heading">
+                <span  [matTooltip]="todo.title.length > 30 ? todo.title : ''" class="todo-text" [ngStyle]="{'text-decoration': todo.completed ? 'line-through' : 'none'}">
+                  {{ truncate(todo.title) }} 
+                </span>
+                <span class="category-pill">{{ todo.category }}</span>
+              </div>
 
+              @if (todo.tags.length) {
+                <div class="chip-row compact">
+                  @for (tag of todo.tags; track tag) {
+                    <span class="tag-chip readonly">#{{ tag }}</span>
+                  }
+                </div>
+              }
 
-      <mat-list-option class="chks1" [selected]="todo.completed" (selectedChange)="onTodoToggled(todo.id, $event)">
+              @if (todo.attachments.length) {
+                <div class="attachment-inline-list">
+                  @for (attachment of todo.attachments; track attachment.id) {
+                    <a class="attachment-link" [href]="attachment.url" target="_blank" rel="noreferrer">
+                      {{ attachment.name }}
+                    </a>
+                  }
+                </div>
+              }
+            </div>
 
-        <div class="chks">
-
-          <button class="delete-button">
-            <mat-icon (click)="onDeleteTodo(todo.id, $event)" aria-hidden="false" aria-label="Example delete icon"
-              fontIcon="delete"></mat-icon>
-          </button>
-
-          <div class="dd">
-            <span style="margin: 0;" [ngStyle]="{'text-decoration': todo.completed ? 'line-through' : 'none'}">{{todo.title}} - {{
-              todo.completed ? 'Completed' : 'Pending' }}</span>
+            <div class="todo-actions">
+              <button class="delete-button" type="button" (click)="onDeleteTodo(todo.id, $event)">
+                <mat-icon fontIcon="delete"></mat-icon>
+              </button>
+              <button class="edit-button" type="button" (click)="onStartTodo(todo, $event)">
+                <mat-icon fontIcon="edit"></mat-icon>
+              </button>
+              <mat-checkbox [checked]="todo.completed" (change)="onTodoToggled(todo.id, $event.checked)" (click)="$event.stopPropagation()"></mat-checkbox>
+            </div>
           </div>
-
-        </div>
-
-      </mat-list-option>
-
+        </mat-list-item>
       }
-    </mat-selection-list>
+    </mat-list>
 
-    <p>
-      Options selected: {{todoes.selectedOptions.selected.length}}
-    </p>
-
-
+    <div class="pagination-row">
+      <button mat-stroked-button type="button" (click)="prevPage()" [disabled]="page() === 1">Prev</button>
+      <span>Page {{ page() }} / {{ totalPages() }}</span>
+      <button mat-stroked-button type="button" (click)="nextPage()" [disabled]="page() === totalPages()">Next</button>
+    </div>
   </div>
-
-
-
-
-
 </section>
-
-<!-- <mat-form-field>
-  <mat-label>Enter a Todo and press Enter</mat-label>
-  <input matInput #input (keyup.enter)="onAddTodo(input.value)">
-  <mat-icon matSuffix>edit</mat-icon>
-</mat-form-field> -->
-
-<!-- <div>{{store.totalCount()}}</div>
-<div>{{store.pendingCount()}}</div>
-<div>{{store.completedCount()}}</div> -->
-
-<!-- <mat-button-toggle-group [value]="store.filter()" (change)="store.setFilter($event.value)">
-  <mat-button-toggle value="all">All</mat-button-toggle>
-  <mat-button-toggle value="pending">Pending</mat-button-toggle>
-  <mat-button-toggle value="completed">Completed</mat-button-toggle>
-</mat-button-toggle-group> -->
-
-
-
-
-<!-- <mat-selection-list #todoes>
-  @for (todo of store.todos(); track todo.id; let index = $index) {
-    
-    
-    <mat-list-option [selected]="todo.completed" (selectedChange)="onTodoToggled(todo.id, $event)">
-        
-        <mat-icon (click)="onDeleteTodo(todo.id, $event)" aria-hidden="false" aria-label="Example delete icon" fontIcon="delete"></mat-icon>
-
-        <span [ngStyle]="{'text-decoration': todo.completed ? 'line-through' : 'none'}">
-          {{todo.title}}
-        </span>
-    </mat-list-option>
-  }
-</mat-selection-list>
-
-<p>
-  Options selected: {{todoes.selectedOptions.selected.length}}
-</p> -->

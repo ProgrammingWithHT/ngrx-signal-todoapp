@@ -1,20 +1,28 @@
 import { inject } from "@angular/core";
-import { Todo } from "../model/todo.model";
+import { DEFAULT_TODO_CATEGORY, Todo, TodoAttachment } from "../model/todo.model";
 import { patchState, signalStore, withComputed, withMethods, withState } from '@ngrx/signals';
 import { Todoservice } from "../services/todoservice";
 
 export type TodosFilter = "all" | "pending" | "completed";
+export type TodoDraft = {
+    title: string;
+    category: string;
+    tags: string[];
+    attachments: TodoAttachment[];
+}
 
 type TodosState = {
     todos: Todo[];
     loading: boolean;
     filter: TodosFilter;
+    categories: string[];
 }
 
 const initialState: TodosState = {
     todos: [],
     loading: false,
-    filter: "all"
+    filter: "all",
+    categories: [DEFAULT_TODO_CATEGORY],
 }
 
 export const TodosStore = signalStore(
@@ -26,15 +34,26 @@ export const TodosStore = signalStore(
                 patchState(store, {loading: true});  //update part of the state (partial update) without replacing the whole state.
 
                 const todos = await todosService.getTodos();
+                const categories = Array.from(new Set([
+                    DEFAULT_TODO_CATEGORY,
+                    ...todos.map(todo => todo.category || DEFAULT_TODO_CATEGORY),
+                ]));
 
-                patchState(store, {todos, loading: false})
+                patchState(store, {todos, categories, loading: false})
             },
 
-            async addTodo(title:string){
-                const todo = await todosService.addTodo({title, completed: false});
+            async addTodo(draft: TodoDraft){
+                const todo = await todosService.addTodo({
+                    title: draft.title,
+                    completed: false,
+                    category: draft.category || DEFAULT_TODO_CATEGORY,
+                    tags: [...draft.tags],
+                    attachments: draft.attachments.map(attachment => ({ ...attachment })),
+                });
 
                 patchState(store, (state) => ({
-                    todos: [...state.todos, todo]
+                    todos: [...state.todos, todo],
+                    categories: ensureCategory(state.categories, todo.category),
                 }))
             },
 
@@ -56,14 +75,59 @@ export const TodosStore = signalStore(
                 }))
             },
 
+            async editTodo(id: string, draft: TodoDraft){
+                await todosService.editTodo(id, {
+                    title: draft.title,
+                    category: draft.category,
+                    tags: [...draft.tags],
+                    attachments: draft.attachments.map(attachment => ({ ...attachment })),
+                });
+
+                patchState(store, (state)=> ({
+                    todos: state.todos.map(todo => todo.id == id ? {
+                        ...todo,
+                        title: draft.title,
+                        category: draft.category || DEFAULT_TODO_CATEGORY,
+                        tags: [...draft.tags],
+                        attachments: draft.attachments.map(attachment => ({ ...attachment })),
+                    }: todo),
+                    categories: ensureCategory(state.categories, draft.category || DEFAULT_TODO_CATEGORY),
+                }))
+            },
+
             setFilter(filter: TodosFilter){
                 patchState(store, {filter})
+            },
+
+            addCategory(name: string){
+                const category = name.trim();
+
+                if (!category) {
+                    return;
+                }
+
+                patchState(store, (state) => ({
+                    categories: ensureCategory(state.categories, category),
+                }));
+            },
+
+            removeCategory(name: string){
+                if (!name || name === DEFAULT_TODO_CATEGORY) {
+                    return;
+                }
+
+                patchState(store, (state) => ({
+                    categories: state.categories.filter(category => category !== name),
+                    todos: state.todos.map(todo =>
+                        todo.category === name ? { ...todo, category: DEFAULT_TODO_CATEGORY } : todo
+                    ),
+                }));
             }
             
         })
     ),
 
-    withComputed(({ todos, filter }) => ({
+    withComputed(({ todos, filter, categories }) => ({
 
         filteredTodos: () => {
             // console.log("cocc", filter())
@@ -84,7 +148,16 @@ export const TodosStore = signalStore(
         pendingCount: () => todos().filter((data)=>{
             return (!data.completed)
         }).length,
-        completedCount: () => todos().filter(data => data.completed).length
+        completedCount: () => todos().filter(data => data.completed).length,
+        availableCategories: () => categories(),
 
     }))
 )
+
+function ensureCategory(categories: string[], category: string) {
+    if (!category) {
+        return categories;
+    }
+
+    return categories.includes(category) ? categories : [...categories, category];
+}
